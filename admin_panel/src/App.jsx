@@ -245,7 +245,7 @@ function App() {
       userId: selectedUser.id,
       userName: selectedUser.fullName,
       title: dietForm.title,
-      dietitianName: 'Uzm. Dyt. Melis Kaya',
+      dietitianName: 'Uzm. Dyt. Bengisu Karabulut',
       startDate: new Date(dietForm.startDate),
       endDate: new Date(dietForm.endDate),
       waterTargetLiters: Number(dietForm.waterTargetLiters),
