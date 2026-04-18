@@ -151,9 +151,9 @@ function App() {
   // Yardımcı Veriler
   const metrics = useMemo(
     () => [
-      { label: 'Aktif müşteriler', value: String(users.length).padStart(2, '0'), icon: '👥', color: 'blue' },
-      { label: 'Randevular', value: String(appointments.length).padStart(2, '0'), icon: '📅', color: 'green' },
-      { label: 'Diyet planları', value: String(dietPlans.length).padStart(2, '0'), icon: '🥗', color: 'purple' },
+      { label: 'Aktif müşteriler', value: String(users.length).padStart(2, '0'), icon: '', color: 'blue' },
+      { label: 'Randevular', value: String(appointments.length).padStart(2, '0'), icon: '', color: 'green' },
+      { label: 'Diyet planları', value: String(dietPlans.length).padStart(2, '0'), icon: '', color: 'purple' },
     ],
     [appointments.length, dietPlans.length, users.length],
   );
