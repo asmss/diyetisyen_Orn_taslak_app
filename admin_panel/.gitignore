@@ -1,0 +1,10 @@
+# node_modules zaten olmalı
+node_modules/
+dist/
+build/
+
+# ÇEVRE DEĞİŞKENLERİ (Çok Önemli)
+.env
+.env.local
+.env.development
+.env.production
