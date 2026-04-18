@@ -51,6 +51,9 @@ function App() {
   const [dietForm, setDietForm] = useState(initialDietForm);
   const [statusMessage, setStatusMessage] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+const [messages, setMessages] = useState([]);
+  const [activeChatUserId, setActiveChatUserId] = useState(null);
+  const [chatInput, setChatInput] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (user) => {
@@ -61,6 +64,17 @@ function App() {
         setIsCheckingAdmin(false);
         return;
       }
+onSnapshot(
+        query(collection(firestore, 'messages'), orderBy('createdAt', 'asc')),
+        (snapshot) => {
+          setMessages(
+            snapshot.docs.map((entry) => ({
+              id: entry.id,
+              ...entry.data(),
+            }))
+          );
+        },
+      ),
 
       setIsCheckingAdmin(true);
       const adminSnapshot = await getDoc(doc(firestore, 'admins', user.uid));
@@ -182,6 +196,18 @@ function App() {
     setStatusMessage('');
   }
 
+async function sendChatMessage(event) {
+    event.preventDefault();
+    if (!chatInput.trim() || !activeChatUserId) return;
+
+    await addDoc(collection(firestore, 'messages'), {
+      chatId: activeChatUserId,
+      senderId: 'admin',
+      text: chatInput,
+      createdAt: serverTimestamp(),
+    });
+    setChatInput('');
+  }
   async function submitAppointment(event) {
     event.preventDefault();
     const selectedUser = usersById[appointmentForm.userId];
@@ -440,6 +466,7 @@ function App() {
             { id: 'appointments', label: '📅 Randevular', icon: '📅' },
             { id: 'plans', label: '🥗 Diyet Planları', icon: '🥗' },
             { id: 'forms', label: '📝 Form', icon: '📝' },
+            { id: 'chat', label: '💬 Mesajlar', icon: '💬' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -924,6 +951,86 @@ function App() {
                   </button>
                 </form>
               </div>
+            </div>
+          </section>
+        )}
+        
+        {activeTab === 'chat' && (
+          <section style={{ ...styles.section, display: 'flex', gap: '20px', height: 'calc(100vh - 100px)' }}>
+            
+            {/* Sol Taraf: Kullanıcı Listesi */}
+            <div style={{ width: '300px', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '16px', borderBottom: '1px solid #eee' }}>
+                <h3 style={styles.panelTitle}>Danışanlar</h3>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                {users.map(user => (
+                  <button
+                    key={user.id}
+                    onClick={() => setActiveChatUserId(user.id)}
+                    style={{
+                      width: '100%', padding: '16px', border: 'none', borderBottom: '1px solid #f9f9f9', textAlign: 'left', cursor: 'pointer',
+                      backgroundColor: activeChatUserId === user.id ? '#667eea' : 'white',
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    <i style={{color:"black",}}>{user.fullName}</i>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sağ Taraf: Aktif Sohbet */}
+            <div style={{ flex: 1, backgroundColor: 'black', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' }}>
+              {!activeChatUserId ? (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
+                  Sohbet başlatmak için soldan bir danışan seçin.
+                </div>
+              ) : (
+                <>
+                  <div style={{ padding: '16px', borderBottom: '1px solid #eee', backgroundColor: '#fafafa', borderRadius: '12px 12px 0 0' }}>
+                    <h3 style={styles.panelTitle}>{usersById[activeChatUserId]?.fullName} ile Sohbet</h3>
+                  </div>
+                  
+                  {/* Mesaj Alanı */}
+                  <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {messages
+                      .filter(m => m.chatId === activeChatUserId)
+                      .map(msg => {
+                        const isAdminMsg = msg.senderId === 'admin';
+                        return (
+                          <div key={msg.id} style={{ alignSelf: isAdminMsg ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
+                            <div style={{
+                              padding: '12px 16px',
+                              backgroundColor: isAdminMsg ? '#667eea' : '#f1f5f9',
+                              color: isAdminMsg ? 'white' : '#111',
+                              borderRadius: isAdminMsg ? '16px 16px 0 16px' : '16px 16px 16px 0',
+                            }}>
+                              {msg.text}
+                            </div>
+                            <span style={{ fontSize: '10px', color: '#999', marginTop: '4px', display: 'block', textAlign: isAdminMsg ? 'right' : 'left' }}>
+                              {msg.createdAt ? formatDate(msg.createdAt) : 'Gönderiliyor...'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* Mesaj Gönderme Inputu */}
+                  <form onSubmit={sendChatMessage} style={{ padding: '16px', borderTop: '1px solid #eee', display: 'flex', gap: '10px' }}>
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      placeholder="Mesajınızı yazın..."
+                      style={{ ...styles.input, flex: 1 }}
+                    />
+                    <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#667eea', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                      Gönder
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
           </section>
         )}
