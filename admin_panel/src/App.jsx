@@ -354,18 +354,96 @@ function App() {
 
   return (
     <div style={styles.pageContainer}>
-      <style>{`
+<style>{`
         @media (max-width: 768px) {
-          div[style*="100vh"] { flex-direction: column !important; height: auto !important; min-height: 100vh !important; }
-          aside { width: 100% !important; height: auto !important; padding: 16px !important; border-right: none !important; border-bottom: 1px solid #2d3748 !important; }
-          aside nav { flex-direction: row !important; overflow-x: auto !important; padding-bottom: 8px !important; scrollbar-width: none; }
+          /* Sayfa iskeletini dikey (column) yap */
+          div[style*="100vh"] {
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: 100vh !important;
+          }
+          
+          /* YENİ: Menüyü (Sidebar) ÜSTE SABİTLE (Sticky) */
+          aside {
+            position: sticky !important; /* Ekranda sabit kalsın */
+            top: 0 !important;           /* En tepede dursun */
+            z-index: 100 !important;     /* Diğer içeriklerin üstünde görünsün */
+            width: 100% !important;
+            height: auto !important;
+            padding: 16px !important;
+            border-right: none !important;
+            border-bottom: 1px solid #2d3748 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important; /* Hafif bir gölge */
+          }
+          
+          /* Sidebar içindeki başlık kısmını daralt */
+          aside > div:first-child {
+             margin-bottom: 12px !important;
+          }
+          aside > div:first-child h1 {
+             fontSize: 16px !important;
+          }
+
+          aside nav {
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            padding-bottom: 4px !important;
+            scrollbar-width: none;
+          }
           aside nav::-webkit-scrollbar { display: none; }
-          aside nav button { white-space: nowrap !important; flex-shrink: 0 !important; }
-          aside > button { margin-top: 12px !important; }
-          main { padding: 16px !important; }
+          aside nav button {
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            padding: 8px 12px !important; /* Butonları biraz küçült */
+            font-size: 13px !important;
+          }
+          
+aside > button {
+  display: block !important;
+  margin-top: 12px !important;
+  width: 100% !important;
+  padding: 10px !important;
+}
+          
+          main {
+            padding: 16px !important;
+            /* Menü sabitlendiği için altındaki içeriğin kaybolmasını engelle */
+            padding-top: 20px !important;
+          }
+          
           div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
           div[style*="space-between"] { flex-wrap: wrap !important; gap: 12px !important; }
           div[style*="gap: 8px"] { flex-wrap: wrap !important; }
+
+
+          .chat-container {
+            gap: 0 !important;
+            height: calc(100vh - 160px) !important;
+            width: 100% !important;
+            overflow: hidden !important;
+          }
+          
+          /* Sol ve Sağ paneller mobilde tam genişlik kaplasın */
+          .chat-sidebar, .chat-main {
+            width: 100% !important;
+            height: 100% !important;
+            max-height: none !important;
+            border-radius: 8px !important;
+          }
+
+          .hide-on-mobile {
+            display: none !important;
+          }
+
+          /* Mobilde geri butonunu görünür yap */
+          .mobile-back-btn {
+            display: block !important;
+          }
+          
+
+
+
+
         }
       `}</style>
 
@@ -643,13 +721,12 @@ function App() {
             </div>
           </section>
         )}
-
-        {/* --- YENİ EKLENEN CHAT BÖLÜMÜ --- */}
+{/* --- GÜNCELLENEN CHAT BÖLÜMÜ --- */}
         {activeTab === 'chat' && (
-          <section style={{ ...styles.section, display: 'flex', gap: '20px', height: 'calc(100vh - 100px)' }}>
+          <section className="chat-container" style={{ ...styles.section, display: 'flex', gap: '20px', height: 'calc(100vh - 100px)' }}>
             
-            {/* Sol Taraf: Kullanıcı Listesi */}
-            <div style={{ width: '300px', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' }}>
+            {/* Sol Taraf: Kullanıcı Listesi (Mobilde biri seçiliyse gizlenir) */}
+            <div className={`chat-sidebar ${activeChatUserId ? 'hide-on-mobile' : ''}`} style={{ width: '300px', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '16px', borderBottom: '1px solid #eee' }}>
                 <h3 style={styles.panelTitle}>Danışanlar</h3>
               </div>
@@ -672,16 +749,24 @@ function App() {
               </div>
             </div>
 
-            {/* Sağ Taraf: Aktif Sohbet */}
-            <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' }}>
+            {/* Sağ Taraf: Aktif Sohbet (Mobilde kimse seçili değilse gizlenir) */}
+            <div className={`chat-main ${!activeChatUserId ? 'hide-on-mobile' : ''}`} style={{ flex: 1, backgroundColor: 'white', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column' }}>
               {!activeChatUserId ? (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999' }}>
                   Sohbet başlatmak için soldan bir danışan seçin.
                 </div>
               ) : (
                 <>
-                  <div style={{ padding: '16px', borderBottom: '1px solid #eee', backgroundColor: '#fafafa', borderRadius: '12px 12px 0 0' }}>
-                    <h3 style={styles.panelTitle}>{usersById[activeChatUserId]?.fullName} ile Sohbet</h3>
+                  <div style={{ padding: '16px', borderBottom: '1px solid #eee', backgroundColor: '#fafafa', borderRadius: '12px 12px 0 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {/* Sadece Mobilde Görünen Geri Butonu */}
+                    <button
+                      className="mobile-back-btn"
+                      onClick={() => setActiveChatUserId(null)}
+                      style={{ display: 'none', background: 'none',color:"black", border: 'none', fontSize: '20px', cursor: 'pointer', padding: '0 8px 0 0' }}
+                    >
+                      ◀
+                    </button>
+                    <h3 style={{...styles.panelTitle, margin: 0}}>{usersById[activeChatUserId]?.fullName}</h3>
                   </div>
                   
                   {/* Mesaj Alanı */}
@@ -691,17 +776,18 @@ function App() {
                       .map(msg => {
                         const isAdminMsg = msg.senderId === 'admin';
                         return (
-                          <div key={msg.id} style={{ alignSelf: isAdminMsg ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
+                          <div key={msg.id} style={{ alignSelf: isAdminMsg ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
                             <div
-                              onClick={() => deleteMessage(msg.id)} // SİLME İŞLEMİ
+                              onClick={() => deleteMessage(msg.id)}
                               title="Silmek için tıklayın"
                               style={{
                                 padding: '12px 16px',
                                 backgroundColor: isAdminMsg ? '#667eea' : '#f1f5f9',
                                 color: isAdminMsg ? 'white' : '#111',
                                 borderRadius: isAdminMsg ? '16px 16px 0 16px' : '16px 16px 16px 0',
-                                cursor: 'pointer', // Tıklanabilir efekti
-                                transition: 'opacity 0.2s'
+                                cursor: 'pointer',
+                                transition: 'opacity 0.2s',
+                                wordBreak: 'break-word'
                               }}
                               onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
                               onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
@@ -722,10 +808,10 @@ function App() {
                       type="text"
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Mesajınızı yazın..."
+                      placeholder="Mesaj yazın..."
                       style={{ ...styles.input, flex: 1 }}
                     />
-                    <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#667eea', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                    <button type="submit" style={{ padding: '10px 16px', backgroundColor: '#667eea', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
                       Gönder
                     </button>
                   </form>
