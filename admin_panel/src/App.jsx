@@ -291,10 +291,14 @@ function App() {
         <style>{`
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+          
+          /* MOBİL UYUM İÇİN EKLENEN STİL */
+          @media (max-width: 768px) {
+            form { padding: 24px !important; }
+          }
         `}</style>
         <form style={styles.authCard} onSubmit={handleLogin}>
           <div style={styles.authHeader}>
-            <div style={styles.authLogo}>💉</div>
             <h1 style={styles.authTitle}>Diyetisyen Paneli</h1>
             <p style={styles.authSubtitle}>Admin erişimi</p>
           </div>
@@ -332,8 +336,6 @@ function App() {
           {statusMessage && (
             <div style={styles.statusMessage}>{statusMessage}</div>
           )}
-
-
         </form>
       </div>
     );
@@ -367,9 +369,66 @@ function App() {
 
   return (
     <div style={styles.pageContainer}>
+      {/* MOBİL UYUMLULUK İÇİN EKLENEN ANA STİL BLOĞU */}
+      <style>{`
+        @media (max-width: 768px) {
+          /* Sayfa iskeletini dikey (column) yap */
+          div[style*="100vh"] {
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: 100vh !important;
+          }
+
+          /* Menüyü (Sidebar) üste al ve yatay kaydırılabilir (scroll) yap */
+          aside {
+            width: 100% !important;
+            height: auto !important;
+            padding: 16px !important;
+            border-right: none !important;
+            border-bottom: 1px solid #2d3748 !important;
+          }
+          aside nav {
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            padding-bottom: 8px !important;
+            scrollbar-width: none; /* Firefox için scroll gizleme */
+          }
+          aside nav::-webkit-scrollbar {
+            display: none; /* Chrome/Safari için scroll gizleme */
+          }
+          aside nav button {
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+          }
+          aside > button { /* Çıkış yap butonu */
+            margin-top: 12px !important;
+          }
+
+          /* Ana içeriğin kenar boşluklarını daralt */
+          main {
+            padding: 16px !important;
+          }
+
+          /* Formlar, Metrikler ve Plan gridlerini tek sütun yap */
+          div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+          }
+
+          /* Yan yana dizili (space-between) başlıkları ve öğeleri dar ekranda alt alta kırılmaya zorla */
+          div[style*="space-between"] {
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+          }
+          
+          /* Buton gruplarını toparla */
+          div[style*="gap: 8px"] {
+            flex-wrap: wrap !important;
+          }
+        }
+      `}</style>
+
       <aside style={styles.sidebar}>
         <div style={styles.sidebarHeader}>
-          <div style={styles.logo}>💉</div>
           <h1 style={styles.sidebarTitle}>Diyetisyen Kontrol Merkezi</h1>
           <p style={styles.userEmail}>{authUser.email}</p>
         </div>
